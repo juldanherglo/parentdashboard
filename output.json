@@ -1,213 +1,213 @@
 {
-  "PeriodConfigurations": [
+  "periodConfigurations": [
     {
-      "Type": "DayOfWeek",
-      "Name": "Friday",
-      "Enabled": true,
-      "CurfewConfigList": [
+      "type": "DayOfWeek",
+      "name": "Friday",
+      "enabled": true,
+      "curfewConfigList": [
         {
-          "End": "19:00",
-          "Type": null,
-          "Start": "08:00",
-          "Enabled": true
+          "end": "19:00",
+          "type": null,
+          "start": "08:00",
+          "enabled": true
         }
       ],
-      "Time": 1759063337181,
-      "TimeLimits": {
-        "ContentTimeLimitsEnabled": true,
-        "ContentTimeLimits": {
+      "time": 1759064319862,
+      "timeLimits": {
+        "contentTimeLimitsEnabled": true,
+        "contentTimeLimits": {
           "ALL": 15
         }
       },
-      "GoalsConfig": {
-        "ContentGoals": {
-          "Category_BOOK": 0,
-          "Category_VIDEO": 0,
-          "Category_APP": 0,
-          "Category_AUDIBLE": 0,
-          "Category_WEB": 0
+      "goalsConfig": {
+        "contentGoals": {
+          "category_BOOK": 0,
+          "category_VIDEO": 0,
+          "category_APP": 0,
+          "category_AUDIBLE": 0,
+          "category_WEB": 0
         },
-        "LearnFirstEnabled": false
+        "learnFirstEnabled": false
       }
     },
     {
-      "Type": "DayOfWeek",
-      "Name": "Monday",
-      "Enabled": true,
-      "CurfewConfigList": [
+      "type": "DayOfWeek",
+      "name": "Monday",
+      "enabled": true,
+      "curfewConfigList": [
         {
-          "End": "19:00",
-          "Type": null,
-          "Start": "08:00",
-          "Enabled": true
+          "end": "19:00",
+          "type": null,
+          "start": "08:00",
+          "enabled": true
         }
       ],
-      "Time": 1759063337181,
-      "TimeLimits": {
-        "ContentTimeLimitsEnabled": true,
-        "ContentTimeLimits": {
+      "time": 1759064319862,
+      "timeLimits": {
+        "contentTimeLimitsEnabled": true,
+        "contentTimeLimits": {
           "ALL": 15
         }
       },
-      "GoalsConfig": {
-        "ContentGoals": {
-          "Category_BOOK": 0,
-          "Category_VIDEO": 0,
-          "Category_APP": 0,
-          "Category_AUDIBLE": 0,
-          "Category_WEB": 0
+      "goalsConfig": {
+        "contentGoals": {
+          "category_BOOK": 0,
+          "category_VIDEO": 0,
+          "category_APP": 0,
+          "category_AUDIBLE": 0,
+          "category_WEB": 0
         },
-        "LearnFirstEnabled": false
+        "learnFirstEnabled": false
       }
     },
     {
-      "Type": "DayOfWeek",
-      "Name": "Saturday",
-      "Enabled": true,
-      "CurfewConfigList": [
+      "type": "DayOfWeek",
+      "name": "Saturday",
+      "enabled": true,
+      "curfewConfigList": [
         {
-          "End": "19:30",
-          "Type": null,
-          "Start": "08:00",
-          "Enabled": true
+          "end": "19:30",
+          "type": null,
+          "start": "08:00",
+          "enabled": true
         }
       ],
-      "Time": 1759063337181,
-      "TimeLimits": {
-        "ContentTimeLimitsEnabled": true,
-        "ContentTimeLimits": {
+      "time": 1759064319862,
+      "timeLimits": {
+        "contentTimeLimitsEnabled": true,
+        "contentTimeLimits": {
           "ALL": 90
         }
       },
-      "GoalsConfig": {
-        "ContentGoals": {
-          "Category_BOOK": 0,
-          "Category_VIDEO": 0,
-          "Category_APP": 0,
-          "Category_AUDIBLE": 0,
-          "Category_WEB": 0
+      "goalsConfig": {
+        "contentGoals": {
+          "category_BOOK": 0,
+          "category_VIDEO": 0,
+          "category_APP": 0,
+          "category_AUDIBLE": 0,
+          "category_WEB": 0
         },
-        "LearnFirstEnabled": false
+        "learnFirstEnabled": false
       }
     },
     {
-      "Type": "DayOfWeek",
-      "Name": "Sunday",
-      "Enabled": true,
-      "CurfewConfigList": [
+      "type": "DayOfWeek",
+      "name": "Sunday",
+      "enabled": true,
+      "curfewConfigList": [
         {
-          "End": "19:00",
-          "Type": null,
-          "Start": "08:00",
-          "Enabled": true
+          "end": "19:00",
+          "type": null,
+          "start": "08:00",
+          "enabled": true
         }
       ],
-      "Time": 1759063337181,
-      "TimeLimits": {
-        "ContentTimeLimitsEnabled": true,
-        "ContentTimeLimits": {
-          "ALL": 90
+      "time": 1759064319862,
+      "timeLimits": {
+        "contentTimeLimitsEnabled": true,
+        "contentTimeLimits": {
+          "ALL": 540
         }
       },
-      "GoalsConfig": {
-        "ContentGoals": {
-          "Category_BOOK": 0,
-          "Category_VIDEO": 0,
-          "Category_APP": 0,
-          "Category_AUDIBLE": 0,
-          "Category_WEB": 0
+      "goalsConfig": {
+        "contentGoals": {
+          "category_BOOK": 0,
+          "category_VIDEO": 0,
+          "category_APP": 0,
+          "category_AUDIBLE": 0,
+          "category_WEB": 0
         },
-        "LearnFirstEnabled": false
+        "learnFirstEnabled": false
       }
     },
     {
-      "Type": "DayOfWeek",
-      "Name": "Thursday",
-      "Enabled": true,
-      "CurfewConfigList": [
+      "type": "DayOfWeek",
+      "name": "Thursday",
+      "enabled": true,
+      "curfewConfigList": [
         {
-          "End": "19:00",
-          "Type": null,
-          "Start": "08:00",
-          "Enabled": true
+          "end": "19:00",
+          "type": null,
+          "start": "08:00",
+          "enabled": true
         }
       ],
-      "Time": 1759063337181,
-      "TimeLimits": {
-        "ContentTimeLimitsEnabled": true,
-        "ContentTimeLimits": {
+      "time": 1759064319862,
+      "timeLimits": {
+        "contentTimeLimitsEnabled": true,
+        "contentTimeLimits": {
           "ALL": 15
         }
       },
-      "GoalsConfig": {
-        "ContentGoals": {
-          "Category_BOOK": 0,
-          "Category_VIDEO": 0,
-          "Category_APP": 0,
-          "Category_AUDIBLE": 0,
-          "Category_WEB": 0
+      "goalsConfig": {
+        "contentGoals": {
+          "category_BOOK": 0,
+          "category_VIDEO": 0,
+          "category_APP": 0,
+          "category_AUDIBLE": 0,
+          "category_WEB": 0
         },
-        "LearnFirstEnabled": false
+        "learnFirstEnabled": false
       }
     },
     {
-      "Type": "DayOfWeek",
-      "Name": "Tuesday",
-      "Enabled": true,
-      "CurfewConfigList": [
+      "type": "DayOfWeek",
+      "name": "Tuesday",
+      "enabled": true,
+      "curfewConfigList": [
         {
-          "End": "19:00",
-          "Type": null,
-          "Start": "08:00",
-          "Enabled": true
+          "end": "19:00",
+          "type": null,
+          "start": "08:00",
+          "enabled": true
         }
       ],
-      "Time": 1759063337181,
-      "TimeLimits": {
-        "ContentTimeLimitsEnabled": true,
-        "ContentTimeLimits": {
+      "time": 1759064319862,
+      "timeLimits": {
+        "contentTimeLimitsEnabled": true,
+        "contentTimeLimits": {
           "ALL": 15
         }
       },
-      "GoalsConfig": {
-        "ContentGoals": {
-          "Category_BOOK": 0,
-          "Category_VIDEO": 0,
-          "Category_APP": 0,
-          "Category_AUDIBLE": 0,
-          "Category_WEB": 0
+      "goalsConfig": {
+        "contentGoals": {
+          "category_BOOK": 0,
+          "category_VIDEO": 0,
+          "category_APP": 0,
+          "category_AUDIBLE": 0,
+          "category_WEB": 0
         },
-        "LearnFirstEnabled": false
+        "learnFirstEnabled": false
       }
     },
     {
-      "Type": "DayOfWeek",
-      "Name": "Wednesday",
-      "Enabled": true,
-      "CurfewConfigList": [
+      "type": "DayOfWeek",
+      "name": "Wednesday",
+      "enabled": true,
+      "curfewConfigList": [
         {
-          "End": "19:00",
-          "Type": null,
-          "Start": "08:00",
-          "Enabled": true
+          "end": "19:00",
+          "type": null,
+          "start": "08:00",
+          "enabled": true
         }
       ],
-      "Time": 1759063337181,
-      "TimeLimits": {
-        "ContentTimeLimitsEnabled": true,
-        "ContentTimeLimits": {
+      "time": 1759064319862,
+      "timeLimits": {
+        "contentTimeLimitsEnabled": true,
+        "contentTimeLimits": {
           "ALL": 15
         }
       },
-      "GoalsConfig": {
-        "ContentGoals": {
-          "Category_BOOK": 0,
-          "Category_VIDEO": 0,
-          "Category_APP": 0,
-          "Category_AUDIBLE": 0,
-          "Category_WEB": 0
+      "goalsConfig": {
+        "contentGoals": {
+          "category_BOOK": 0,
+          "category_VIDEO": 0,
+          "category_APP": 0,
+          "category_AUDIBLE": 0,
+          "category_WEB": 0
         },
-        "LearnFirstEnabled": false
+        "learnFirstEnabled": false
       }
     }
   ]

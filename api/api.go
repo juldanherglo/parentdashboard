@@ -22,54 +22,54 @@ type CliConfig struct {
 }
 
 type HouseHoldMember struct {
-	AvatarUri  string
-	Role       string
-	FirstName  string
-	DirectedId string
+	AvatarUri  string `json:"avatarUri"`
+	Role       string `json:"role"`
+	FirstName  string `json:"firstName"`
+	DirectedId string `json:"directedId"`
 }
 
 type HouseHold struct {
-	HouseholdId string
-	Members     []HouseHoldMember
+	HouseholdId string            `json:"householdId"`
+	Members     []HouseHoldMember `json:"members"`
 }
 
 type CurfewConfig struct {
-	End     string
-	Type    any
-	Start   string
-	Enabled bool
+	End     string `json:"end"`
+	Type    any    `json:"type"`
+	Start   string `json:"start"`
+	Enabled bool   `json:"enabled"`
 }
 
 type TimeLimits struct {
-	ContentTimeLimitsEnabled bool
-	ContentTimeLimits        map[string]int
+	ContentTimeLimitsEnabled bool           `json:"contentTimeLimitsEnabled"`
+	ContentTimeLimits        map[string]int `json:"contentTimeLimits"`
 }
 
 type ContentGoals struct {
-	Category_BOOK    int
-	Category_VIDEO   int
-	Category_APP     int
-	Category_AUDIBLE int
-	Category_WEB     int
+	Category_BOOK    int `json:"category_BOOK"`
+	Category_VIDEO   int `json:"category_VIDEO"`
+	Category_APP     int `json:"category_APP"`
+	Category_AUDIBLE int `json:"category_AUDIBLE"`
+	Category_WEB     int `json:"category_WEB"`
 }
 
 type GoalsConfig struct {
-	ContentGoals      ContentGoals
-	LearnFirstEnabled bool
+	ContentGoals      ContentGoals `json:"contentGoals"`
+	LearnFirstEnabled bool         `json:"learnFirstEnabled"`
 }
 
 type PeriodConfig struct {
-	Type             string
-	Name             string
-	Enabled          bool
-	CurfewConfigList []CurfewConfig
-	Time             uint64
-	TimeLimits       TimeLimits
-	GoalsConfig      GoalsConfig
+	Type             string         `json:"type"`
+	Name             string         `json:"name"`
+	Enabled          bool           `json:"enabled"`
+	CurfewConfigList []CurfewConfig `json:"curfewConfigList"`
+	Time             uint64         `json:"time"`
+	TimeLimits       TimeLimits     `json:"timeLimits"`
+	GoalsConfig      GoalsConfig    `json:"goalsConfig"`
 }
 
 type PeriodConfigs struct {
-	PeriodConfigurations []PeriodConfig
+	PeriodConfigurations []PeriodConfig `json:"periodConfigurations"`
 }
 
 type HTTPParameter struct {
@@ -185,6 +185,12 @@ func (c CliConfig) httpRequest(url string, parms []HTTPParameter, data any) erro
 		return fmt.Errorf("json.Unmarshal() failed: %s\n\nTried to parse this content:\n%s", err, string(body))
 	}
 
+	bytes, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(bytes))
+
 	return nil
 }
 
@@ -243,12 +249,6 @@ func (c CliConfig) GetTimes() error {
 	for _, periodConfig := range periodConfigs.PeriodConfigurations {
 		slog.Info("GetTimes()", "periodConfig", fmt.Sprintf("%#v", periodConfig))
 	}
-
-	bytes, err := json.MarshalIndent(periodConfigs, "", "  ")
-	if err != nil {
-		return err
-	}
-	fmt.Println(string(bytes))
 
 	return nil
 }
