@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"parentdashboard/api"
 
 	"github.com/spf13/cobra"
@@ -25,4 +26,14 @@ var setCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(setCmd)
+
+	setCmd.PersistentFlags().String("set-file-name", "", "Filename of the json file to set new time settings.")
+	if err := viper.BindPFlag("set-file-name", setCmd.PersistentFlags().Lookup("set-file-name")); err != nil {
+		fmt.Print(err)
+	}
+
+	setCmd.PersistentFlags().String("csrf-token", "", "CSRF_TOKEN for authentication of PUT request.")
+	if err := viper.BindPFlag("csrf-token", setCmd.PersistentFlags().Lookup("csrf-token")); err != nil {
+		fmt.Print(err)
+	}
 }

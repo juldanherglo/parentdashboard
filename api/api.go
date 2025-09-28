@@ -1,8 +1,10 @@
 package api
 
 import (
+	"bytes"
 	"fmt"
 	"io"
+	"sort"
 
 	"encoding/json"
 	"log/slog"
@@ -19,6 +21,10 @@ type CliConfig struct {
 	LogLevel  string `mapstructure:"log-level"`
 	Cookies   string `mapstructure:"cookies"`
 	FirstName string `mapstructure:"first-name"`
+
+	// set
+	SetFileName string `mapstructure:"set-file-name"`
+	CSRF_TOKEN  string `mapstructure:"csrf-token"`
 }
 
 type HouseHoldMember struct {
@@ -69,6 +75,7 @@ type PeriodConfig struct {
 }
 
 type PeriodConfigs struct {
+	ChildDirectedId      string         `json:"childDirectedId"`
 	PeriodConfigurations []PeriodConfig `json:"periodConfigurations"`
 }
 
@@ -119,19 +126,13 @@ func ConfigureLogging(level string) error {
 	return nil
 }
 
-func (c CliConfig) httpRequest(url string, parms []HTTPParameter, data any) error {
+func (c CliConfig) httpRequest(url string, method string, parms []HTTPParameter, data any, reqBody io.Reader) error {
 	cookies, err := http.ParseCookie(c.Cookies)
 	if err != nil {
 		return err
 	}
 
-	res, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-
-	// Create a new GET request
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(method, url, reqBody)
 	if err != nil {
 		return err
 	}
@@ -148,8 +149,16 @@ func (c CliConfig) httpRequest(url string, parms []HTTPParameter, data any) erro
 	req.Header.Add("sec-fetch-site", "same-origin")
 	req.Header.Add("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36")
 
+	if c.CSRF_TOKEN != "" {
+		req.Header.Add("x-amzn-csrf", c.CSRF_TOKEN)
+	}
+
+	if reqBody != nil {
+		req.Header.Add("content-type", "application/json;charset=UTF-8")
+	}
+
 	for _, cookie := range cookies {
-		slog.Debug("getHousehold()", "cookie", fmt.Sprintf("%#v", cookie))
+		slog.Debug("http request()", "cookie", fmt.Sprintf("%#v", cookie))
 		req.AddCookie(cookie)
 	}
 
@@ -174,22 +183,24 @@ func (c CliConfig) httpRequest(url string, parms []HTTPParameter, data any) erro
 	body, err := io.ReadAll(resp.Body)
 
 	if resp.StatusCode > 299 {
-		return fmt.Errorf("Response failed with status code: %d and\nbody: %s\n", res.StatusCode, body)
+		return fmt.Errorf("Response failed with status code: %d and body: %s\n", resp.StatusCode, body)
 	}
 	if err != nil {
 		return err
 	}
-	slog.Debug("getHousehold()", "body", body)
+	slog.Debug("http call", "body", body)
 
-	if err := json.Unmarshal(body, data); err != nil {
-		return fmt.Errorf("json.Unmarshal() failed: %s\n\nTried to parse this content:\n%s", err, string(body))
-	}
+	if reqBody == nil {
+		if err := json.Unmarshal(body, data); err != nil {
+			return fmt.Errorf("json.Unmarshal() failed: %s\n\nTried to parse this content:\n%s", err, string(body))
+		}
 
-	bytes, err := json.MarshalIndent(data, "", "  ")
-	if err != nil {
-		return err
+		bytes, err := json.MarshalIndent(data, "", "  ")
+		if err != nil {
+			return err
+		}
+		slog.Debug("http call", "parsed-body", string(bytes))
 	}
-	fmt.Println(string(bytes))
 
 	return nil
 }
@@ -197,9 +208,9 @@ func (c CliConfig) httpRequest(url string, parms []HTTPParameter, data any) erro
 func (c CliConfig) getHousehold() (HouseHold, error) {
 	houseHold := HouseHold{}
 
-	err := c.httpRequest("https://eltern.amazon.de/ajax/get-household", []HTTPParameter{}, &houseHold)
+	err := c.httpRequest("https://eltern.amazon.de/ajax/get-household", "GET", []HTTPParameter{}, &houseHold, nil)
 	if err != nil {
-		return houseHold, err
+		return houseHold, fmt.Errorf("http request to get-household api failed: %s", err)
 	}
 
 	for _, member := range houseHold.Members {
@@ -227,6 +238,34 @@ func (c CliConfig) getDirectedId() (string, error) {
 	return "", fmt.Errorf("Did not find first-name: %q in members: %#v", c.FirstName, foundMembers)
 }
 
+func getLessFunction(periodConfigurations []PeriodConfig, err *error) func(i int, j int) bool {
+	weekdaysArr := []string{
+		"Monday",
+		"Tuesday",
+		"Wednesday",
+		"Thursday",
+		"Friday",
+		"Saturday",
+		"Sunday",
+	}
+	weekdays := map[string]int{}
+
+	for i, day := range weekdaysArr {
+		weekdays[day] = i
+	}
+
+	return func(i int, j int) bool {
+		if _, found := weekdays[periodConfigurations[i].Name]; !found {
+			*err = fmt.Errorf("Unknown name %q. Known days: %#v", periodConfigurations[i].Name, weekdaysArr)
+		}
+		if _, found := weekdays[periodConfigurations[j].Name]; !found {
+			*err = fmt.Errorf("Unknown name %q. Known days: %#v", periodConfigurations[j].Name, weekdaysArr)
+		}
+
+		return weekdays[periodConfigurations[i].Name] < weekdays[periodConfigurations[j].Name]
+	}
+}
+
 func (c CliConfig) GetTimes() error {
 	if err := ConfigureLogging(c.LogLevel); err != nil {
 		return err
@@ -241,7 +280,12 @@ func (c CliConfig) GetTimes() error {
 
 	periodConfigs := PeriodConfigs{}
 
-	err = c.httpRequest("https://eltern.amazon.de/ajax/get-time-limit-v2", []HTTPParameter{{"childDirectedId", directedId}}, &periodConfigs)
+	err = c.httpRequest("https://eltern.amazon.de/ajax/get-time-limit-v2", "GET", []HTTPParameter{{"childDirectedId", directedId}}, &periodConfigs, nil)
+	if err != nil {
+		return fmt.Errorf("http request to get-time-limit-v2 api failed: %s", err)
+	}
+
+	sort.Slice(periodConfigs.PeriodConfigurations, getLessFunction(periodConfigs.PeriodConfigurations, &err))
 	if err != nil {
 		return err
 	}
@@ -253,12 +297,55 @@ func (c CliConfig) GetTimes() error {
 	return nil
 }
 
+func (c CliConfig) readTimeSettingsFile() (PeriodConfigs, error) {
+	periodConfigs := PeriodConfigs{}
+	jsonFile, err := os.Open(c.SetFileName)
+	if err != nil {
+		return periodConfigs, fmt.Errorf("os.Open(%s) failed: %s", c.SetFileName, err)
+	}
+	defer jsonFile.Close()
+
+	bytes, err := io.ReadAll(jsonFile)
+	if err != nil {
+		return periodConfigs, fmt.Errorf("io.ReadAll(%s) failed: %s", c.SetFileName, err)
+	}
+
+	err = json.Unmarshal(bytes, &periodConfigs)
+	if err != nil {
+		return periodConfigs, fmt.Errorf("json.Unmarshal(%s) failed: %s", c.SetFileName, err)
+	}
+
+	return periodConfigs, nil
+}
+
 func (c CliConfig) SetTimes() error {
 	if err := ConfigureLogging(c.LogLevel); err != nil {
 		return err
 	}
 
-	slog.Info("SetTimes() called")
+	periodConfigs, err := c.readTimeSettingsFile()
+	if err != nil {
+		return err
+	}
+
+	directedId, err := c.getDirectedId()
+	if err != nil {
+		return err
+	}
+
+	periodConfigs.ChildDirectedId = directedId
+
+	jsonBytes, err := json.Marshal(periodConfigs)
+	if err != nil {
+		return err
+	}
+
+	err = c.httpRequest("https://eltern.amazon.de/ajax/set-time-limit-v2", "PUT", []HTTPParameter{}, &periodConfigs, bytes.NewBuffer(jsonBytes))
+	if err != nil {
+		return fmt.Errorf("http request to set-time-limit-v2 api failed: %s", err)
+	}
+
+	slog.Info("SetTimes() called successfully")
 
 	return nil
 }

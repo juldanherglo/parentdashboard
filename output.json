@@ -196,7 +196,7 @@
       "timeLimits": {
         "contentTimeLimitsEnabled": true,
         "contentTimeLimits": {
-          "ALL": 540
+          "ALL": 90
         }
       },
       "goalsConfig": {
