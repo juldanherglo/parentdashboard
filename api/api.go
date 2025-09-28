@@ -2,13 +2,93 @@ package api
 
 import (
 	"fmt"
+	"io"
+
+	"encoding/json"
 	"log/slog"
+	"net/http"
+	"net/http/httputil"
+
 	"os"
 )
 
+type loggingTransport struct{}
+
 type CliConfig struct {
 	// shared parameters
-	LogLevel string `mapstructure:"log-level"`
+	LogLevel  string `mapstructure:"log-level"`
+	Cookies   string `mapstructure:"cookies"`
+	FirstName string `mapstructure:"first-name"`
+}
+
+type HouseHoldMember struct {
+	AvatarUri  string
+	Role       string
+	FirstName  string
+	DirectedId string
+}
+
+type HouseHold struct {
+	HouseholdId string
+	Members     []HouseHoldMember
+}
+
+type CurfewConfig struct {
+	End     string
+	Type    any
+	Start   string
+	Enabled bool
+}
+
+type TimeLimits struct {
+	ContentTimeLimitsEnabled bool
+	ContentTimeLimits        map[string]int
+}
+
+type ContentGoals struct {
+	Category_BOOK    int
+	Category_VIDEO   int
+	Category_APP     int
+	Category_AUDIBLE int
+	Category_WEB     int
+}
+
+type GoalsConfig struct {
+	ContentGoals      ContentGoals
+	LearnFirstEnabled bool
+}
+
+type PeriodConfig struct {
+	Type             string
+	Name             string
+	Enabled          bool
+	CurfewConfigList []CurfewConfig
+	Time             uint64
+	TimeLimits       TimeLimits
+	GoalsConfig      GoalsConfig
+}
+
+type PeriodConfigs struct {
+	PeriodConfigurations []PeriodConfig
+}
+
+type HTTPParameter struct {
+	Key   string
+	Value string
+}
+
+func (s *loggingTransport) RoundTrip(r *http.Request) (*http.Response, error) {
+	bytes, _ := httputil.DumpRequestOut(r, true)
+
+	resp, err := http.DefaultTransport.RoundTrip(r)
+	// err is returned after dumping the response
+
+	respBytes, _ := httputil.DumpResponse(resp, true)
+	bytes = append(bytes, respBytes...)
+
+	fmt.Printf("%s\n", bytes)
+
+	return resp, err
 }
 
 func ConfigureLogging(level string) error {
@@ -39,17 +119,141 @@ func ConfigureLogging(level string) error {
 	return nil
 }
 
-func (c *CliConfig) GetTimes() error {
+func (c CliConfig) httpRequest(url string, parms []HTTPParameter, data any) error {
+	cookies, err := http.ParseCookie(c.Cookies)
+	if err != nil {
+		return err
+	}
+
+	res, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+
+	// Create a new GET request
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Add("accept", "application/json, text/plain, */*")
+	req.Header.Add("accept-language", "de-DE,de;q=0.9")
+	req.Header.Add("priority", "u=1, i")
+	req.Header.Add("referer", "https://eltern.amazon.de/settings/timelimits")
+	req.Header.Add("sec-ch-ua", "\"Chromium\";v=\"140\", \"Not=A?Brand\";v=\"24\", \"Google Chrome\";v=\"140\"")
+	req.Header.Add("sec-ch-ua-mobile", "?0")
+	req.Header.Add("sec-ch-ua-platform", "\"macOS\"")
+	req.Header.Add("sec-fetch-dest", "empty")
+	req.Header.Add("sec-fetch-mode", "cors")
+	req.Header.Add("sec-fetch-site", "same-origin")
+	req.Header.Add("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36")
+
+	for _, cookie := range cookies {
+		slog.Debug("getHousehold()", "cookie", fmt.Sprintf("%#v", cookie))
+		req.AddCookie(cookie)
+	}
+
+	q := req.URL.Query()
+	for _, parm := range parms {
+		q.Add(parm.Key, parm.Value)
+	}
+	req.URL.RawQuery = q.Encode()
+
+	client := &http.Client{}
+
+	if c.LogLevel == "debug" {
+		client.Transport = &loggingTransport{}
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+
+	if resp.StatusCode > 299 {
+		return fmt.Errorf("Response failed with status code: %d and\nbody: %s\n", res.StatusCode, body)
+	}
+	if err != nil {
+		return err
+	}
+	slog.Debug("getHousehold()", "body", body)
+
+	if err := json.Unmarshal(body, data); err != nil {
+		return fmt.Errorf("json.Unmarshal() failed: %s\n\nTried to parse this content:\n%s", err, string(body))
+	}
+
+	return nil
+}
+
+func (c CliConfig) getHousehold() (HouseHold, error) {
+	houseHold := HouseHold{}
+
+	err := c.httpRequest("https://eltern.amazon.de/ajax/get-household", []HTTPParameter{}, &houseHold)
+	if err != nil {
+		return houseHold, err
+	}
+
+	for _, member := range houseHold.Members {
+		slog.Debug("getHousehold()", "member", fmt.Sprintf("%#v", member))
+	}
+
+	return houseHold, nil
+}
+
+func (c CliConfig) getDirectedId() (string, error) {
+	foundMembers := []string{}
+	houseHold, err := c.getHousehold()
+	if err != nil {
+		return "", err
+	}
+
+	for _, member := range houseHold.Members {
+		if member.FirstName == c.FirstName {
+			return member.DirectedId, nil
+		}
+
+		foundMembers = append(foundMembers, member.FirstName)
+	}
+
+	return "", fmt.Errorf("Did not find first-name: %q in members: %#v", c.FirstName, foundMembers)
+}
+
+func (c CliConfig) GetTimes() error {
 	if err := ConfigureLogging(c.LogLevel); err != nil {
 		return err
 	}
 
 	slog.Info("GetTimes() called")
 
+	directedId, err := c.getDirectedId()
+	if err != nil {
+		return err
+	}
+
+	periodConfigs := PeriodConfigs{}
+
+	err = c.httpRequest("https://eltern.amazon.de/ajax/get-time-limit-v2", []HTTPParameter{{"childDirectedId", directedId}}, &periodConfigs)
+	if err != nil {
+		return err
+	}
+
+	for _, periodConfig := range periodConfigs.PeriodConfigurations {
+		slog.Info("GetTimes()", "periodConfig", fmt.Sprintf("%#v", periodConfig))
+	}
+
+	bytes, err := json.MarshalIndent(periodConfigs, "", "  ")
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(bytes))
+
 	return nil
 }
 
-func (c *CliConfig) SetTimes() error {
+func (c CliConfig) SetTimes() error {
 	if err := ConfigureLogging(c.LogLevel); err != nil {
 		return err
 	}

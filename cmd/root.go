@@ -43,4 +43,14 @@ func init() {
 	if err := viper.BindPFlag("log-level", rootCmd.PersistentFlags().Lookup("log-level")); err != nil {
 		fmt.Print(err)
 	}
+
+	rootCmd.PersistentFlags().String("cookies", "", "cookies to authenticate against the parent-dashboard api")
+	if err := viper.BindPFlag("cookies", rootCmd.PersistentFlags().Lookup("cookies")); err != nil {
+		fmt.Print(err)
+	}
+
+	rootCmd.PersistentFlags().String("first-name", "", "first-name of person to get/set times")
+	if err := viper.BindPFlag("first-name", rootCmd.PersistentFlags().Lookup("first-name")); err != nil {
+		fmt.Print(err)
+	}
 }
