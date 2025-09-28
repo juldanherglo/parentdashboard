@@ -340,7 +340,7 @@ func (c CliConfig) SetTimes() error {
 		return err
 	}
 
-	err = c.httpRequest("https://eltern.amazon.de/ajax/set-time-limit-v2", "PUT", []HTTPParameter{}, &periodConfigs, bytes.NewBuffer(jsonBytes))
+	err = c.httpRequest("https://eltern.amazon.de/ajax/set-time-limit-v2", "PUT", []HTTPParameter{}, nil, bytes.NewBuffer(jsonBytes))
 	if err != nil {
 		return fmt.Errorf("http request to set-time-limit-v2 api failed: %s", err)
 	}
