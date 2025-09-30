@@ -22,6 +22,9 @@ type CliConfig struct {
 	Cookies   string `mapstructure:"cookies"`
 	FirstName string `mapstructure:"first-name"`
 
+	// get
+	GetFileName string `mapstructure:"get-file-name"`
+
 	// set
 	SetFileName string `mapstructure:"set-file-name"`
 	CSRF_TOKEN  string `mapstructure:"csrf-token"`
@@ -292,6 +295,19 @@ func (c CliConfig) GetTimes() error {
 
 	for _, periodConfig := range periodConfigs.PeriodConfigurations {
 		slog.Info("GetTimes()", "periodConfig", fmt.Sprintf("%#v", periodConfig))
+	}
+
+	if c.GetFileName != "" {
+		bytes, err := json.MarshalIndent(periodConfigs, "", "  ")
+		if err != nil {
+			return err
+		}
+		err = os.WriteFile(c.GetFileName, bytes, 0644)
+		if err != nil {
+			return err
+		}
+
+		slog.Info("Written setting into file", "filename", c.GetFileName)
 	}
 
 	return nil

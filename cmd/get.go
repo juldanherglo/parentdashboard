@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"parentdashboard/api"
 
 	"github.com/spf13/cobra"
@@ -25,4 +26,9 @@ var getCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(getCmd)
+
+	getCmd.PersistentFlags().String("get-file-name", "", "Filename of the json file to write current time gettings into.")
+	if err := viper.BindPFlag("get-file-name", getCmd.PersistentFlags().Lookup("get-file-name")); err != nil {
+		fmt.Print(err)
+	}
 }
